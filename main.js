@@ -2,6 +2,7 @@
 const express = require('express');
 const app = express(); // express 함수 호출
 const bodyParser = require('body-parser');
+const compression = require('compression');
 
 const fs = require('fs');
 const template = require('./lib/template.js');
@@ -15,6 +16,14 @@ const path = require('path');
 app.use(bodyParser, bodyParser.urlencoded({ extended: false }));
 // json 타입 요청 처리
 app.use(bodyParser, json());
+
+// compression
+
+// api 요청의 size를 줄여준다.
+// .gzip 방식으로 압축된 데이터를 전송
+// 웹브라우저는 압축된 데이터를 압축된 방식으로 다시 해제해서 사용
+// 미들웨어를 return
+app.use(compression());
 
 // routing
 
