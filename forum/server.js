@@ -7,5 +7,19 @@ app.listen(8080, () => {
 });
 
 app.get('/', (req, res) => {
-  res.send('hello');
+  // html 파일 전송
+  // __dirname = 현재 파일이 담긴 경로
+  res.sendFile(__dirname + '/index.html');
+});
+
+app.get('/news', (req, res) => {
+  res.send('good news');
+});
+
+app.get('/shop', (req, res) => {
+  res.send('happy shopping');
+});
+
+app.get('/about', (req, res) => {
+  res.sendFile(__dirname + '/about.html');
 });
