@@ -32,13 +32,17 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
+// mongodb create
 app.get('/news', (req, res) => {
   db.collection('post').insertOne({ title: 'hello' });
   res.send('good news');
 });
 
-app.get('/shop', (req, res) => {
-  res.send('happy shopping');
+// mongodb read
+app.get('/list', async (req, res) => {
+  const post = await db.collection('post').find().toArray();
+
+  res.send(post);
 });
 
 app.get('/about', (req, res) => {
