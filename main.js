@@ -3,10 +3,22 @@ const express = require('express');
 const app = express(); // express 함수 호출
 const bodyParser = require('body-parser');
 const compression = require('compression');
+const helmet = require('helmet');
+const topicRouter = require('./routes/topic');
 
 const fs = require('fs');
 const template = require('./lib/template.js');
 const path = require('path');
+
+// helmet
+
+// 각종 웹사이트 보안 솔루션이 기본적으로 적용된다.
+app.use(helmet());
+
+// Router
+
+// 연결된 topicRouter 경로의 routing은 /topic path 생략 가능
+app.use('/topic', topicRouter);
 
 // body-parser
 // routing 함수가 실행되기 전에 이 코드가 미들웨어로 들어오게 된다.
@@ -16,6 +28,14 @@ const path = require('path');
 app.use(bodyParser, bodyParser.urlencoded({ extended: false }));
 // json 타입 요청 처리
 app.use(bodyParser, json());
+
+// static file 조회
+
+// public 폴더 안에서 파일들을 찾겠다.
+// port/images/파일 이름.확장자 로 요청하면 해당 파일에 접근 가능
+app.use(express.static('public'));
+
+app.router('/');
 
 // next = 그 다음에 호출될 middleware가 담겨있다.
 // 이 경우 무조건 middleware로 실행
