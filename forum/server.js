@@ -1,12 +1,16 @@
 const express = require('express');
 const app = express();
 require('dotenv').config();
+const bodyparser = require('body-parser');
 
 // ejs (template engine)
 
 // ejs setting
 // html 파일안에 서버 데이터를 넣을 수 있다.
 app.set('view engine', 'ejs');
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 const { MongoClient } = require('mongodb');
 const url = process.env.MONGODB_URI;
@@ -62,4 +66,24 @@ app.get('/time', (req, res) => {
   const date = new Date();
 
   res.render('date.ejs', { data: date });
+});
+
+app.get('/write', (req, res) => {
+  res.render('write.ejs');
+});
+
+app.post('/add', (req, res) => {
+  const { title, content } = req.body;
+  try {
+    if (title === '') {
+      res.send('empty in title');
+    } else {
+      db.collection('post').insertOne({ title, content });
+
+      res.redirect('/list');
+      // res.status(200).json({ status: 'success' });
+    }
+  } catch (e) {
+    res.status(400).send({ status: 'fail' });
+  }
 });
