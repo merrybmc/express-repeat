@@ -17,6 +17,42 @@ app.use(bodyParser, bodyParser.urlencoded({ extended: false }));
 // json 타입 요청 처리
 app.use(bodyParser, json());
 
+// next = 그 다음에 호출될 middleware가 담겨있다.
+// 이 경우 무조건 middleware로 실행
+// app.use((req, res, next) => {
+//   fs.readdir('./data', (error, filelist) => {
+//     // req에 데이터를 담아서 다음 middleware에 전송
+//     req.list = filelist;
+//     next();
+//   });
+// });
+
+// get 방식의 요청에만 middleware로 실행
+app.get('*', (req, res, next) => {
+  fs.readdir('./data', (error, filelist) => {
+    // req에 데이터를 담아서 다음 middleware에 전송
+    req.list = filelist;
+    next();
+  });
+});
+
+// middleware 실행 순서 조작
+app.get('/user/:id', (req, res) => {
+  const { id } = req.params;
+  if (id) {
+    next('route'); // special route 실행
+  } else {
+    next(); // regular route 실행
+  }
+  (req, res, next) => {
+    res.send('regular');
+  };
+});
+
+app.get('/user/:id', function (req, res, next) {
+  res.send('special');
+});
+
 // compression
 
 // api 요청의 size를 줄여준다.
@@ -37,7 +73,7 @@ app.get('/', (request, response) =>
   fs.readdir('./data', function (error, filelist) {
     var title = 'Welcome';
     var description = 'Hello, Node.js';
-    var list = template.list(filelist);
+    var list = template.list(filelist.list);
     var html = template.HTML(
       title,
       list,
@@ -66,7 +102,7 @@ app.get('/page/:pageId', (req, res) => {
       var sanitizedDescription = sanitizeHtml(description, {
         allowedTags: ['h1'],
       });
-      var list = template.list(filelist);
+      var list = template.list(filelist.list);
       var html = template.HTML(
         sanitizedTitle,
         list,
@@ -86,7 +122,7 @@ app.get('/page/:pageId', (req, res) => {
 app.get('/create', (req, res) => {
   fs.readdir('./data', function (error, filelist) {
     var title = 'WEB - create';
-    var list = template.list(filelist);
+    var list = template.list(filelist.list);
     var html = template.HTML(
       title,
       list,
@@ -135,12 +171,12 @@ app.post('/create_process', (req, res) => {
 // });
 // });
 
-app.get('/update', (req, res) => {
+app.get('/update/:pageId', (req, res) => {
   fs.readdir('./data', function (error, filelist) {
     var filteredId = path.parse(queryData.id).base;
     fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
       var title = queryData.id;
-      var list = template.list(filelist);
+      var list = template.list(filelist.list);
       var html = template.HTML(
         title,
         list,
