@@ -2,6 +2,12 @@ const express = require('express');
 const app = express();
 require('dotenv').config();
 
+// ejs (template engine)
+
+// ejs setting
+// html 파일안에 서버 데이터를 넣을 수 있다.
+app.set('view engine', 'ejs');
+
 const { MongoClient } = require('mongodb');
 const url = process.env.MONGODB_URI;
 
@@ -42,9 +48,18 @@ app.get('/news', (req, res) => {
 app.get('/list', async (req, res) => {
   const post = await db.collection('post').find().toArray();
 
-  res.send(post);
+  // res.send(post);
+  // ejs 파일 기본 경로 = views 폴더
+  // ejs 파일로 데이터를 전송
+  res.render('list.ejs', { data: post });
 });
 
 app.get('/about', (req, res) => {
   res.sendFile(__dirname + '/about.html');
+});
+
+app.get('/time', (req, res) => {
+  const date = new Date();
+
+  res.render('date.ejs', { data: date });
 });

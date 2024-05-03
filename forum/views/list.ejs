@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+
+    <body class="grey-bg">
+        <!-- html 파일에서 서버에게 데이터 받고 출력하기 -->
+        <%=JSON.stringify(data)%>
+            <div class="white-bg">
+                <div class="list-box">
+                    <h4>
+                        <%=data[0].title%>
+                    </h4>
+                    <p>
+                        <%=data[0].content%>
+                    </p>
+                </div>
+                <div class="list-box">
+                    <h4>
+                        <%=data[1].title%>
+                    </h4>
+                    <p>
+                        <%=data[1].content%>
+                    </p>
+                </div>
+                <div class="list-box">
+                    <h4>
+                        <%=data[2].title%>
+                    </h4>
+                    <p>
+                        <%=data[2].content%>
+                    </p>
+                </div>
+            </div>
+    </body>
+</body>
+
+</html>
