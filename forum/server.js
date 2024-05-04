@@ -103,12 +103,13 @@ app.get('/write', (req, res) => {
 
 app.post('/add', (req, res) => {
   const { title, content } = req.body;
+  const { _id, username } = req.user;
   try {
     if (!req.user) throw new Error('로그인중이지 않습니다.');
     if (title === '') {
       res.send('empty in title');
     } else {
-      db.collection('post').insertOne({ title, content });
+      db.collection('post').insertOne({ title, content, userId: _id, username });
 
       res.redirect('/list');
       // res.status(200).json({ status: 'success' });
@@ -166,9 +167,11 @@ app.put('/edit/:id', async (req, res) => {
 
 app.delete('/delete/:id', async (req, res) => {
   const { id } = req.params;
-  console.log(id);
+  const { _id, username } = req.user;
   try {
-    const data = await db.collection('post').deleteOne({ _id: new ObjectId(id) });
+    const data = await db
+      .collection('post')
+      .deleteOne({ _id: new ObjectId(id), userId: _id, username: username });
     console.log('a', data);
     res.status(200).json({ status: 'success', data });
   } catch (e) {
