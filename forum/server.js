@@ -174,3 +174,64 @@ app.delete('/delete/:id', async (req, res) => {
     res.status(400).json({ status: 'fail', error: e.massage });
   }
 });
+
+// npm install express-session passport passport-local
+// express-session - session create
+// passport - user auth
+
+// passport setting
+const session = require('express-session');
+const passport = require('passport');
+const localStrategy = require('passport-local');
+
+// 순서 지켜서 use할 것
+app.use(passport.initialize());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET, // session의 id를 암호화해서 유저에게 전송
+    resave: false, // 클라이언트가 api 요청을 보낼 때 마다 session을 갱신할건지
+    saveUninitialized: false, // login을 안해도 session을 생성할건지
+  })
+);
+app.use(passport.session());
+// passport-local - ID/PW vaild
+
+// passport id/pw 검증 로직
+// id/pw 외에도 요청받아서 검증하고 싶으면 passReqToCallback option 사용
+passport.use(
+  new localStrategy(async (id, password, cb) => {
+    try {
+      let result = await db.collection('user').findOne({ username: id });
+
+      if (!result) {
+        // parameter 2 = true - 인증 성공(생략 가능), false - 회원인증 실패
+        return cb(null, false, { message: '등록되지 않은 아이디 입니다.' });
+      }
+      if (!result.password === password) {
+        return cb(null, result);
+      } else {
+        return cb(null, false, { message: '비밀번호가 일치하지 않습니다.' });
+      }
+    } catch (e) {}
+  })
+);
+
+app.get('/login', async (req, res) => {
+  res.render('login.ejs');
+});
+
+app.post('/login', async (req, res, next) => {
+  // passport id/pw 검증 로직 실행
+  // 검증에 실패하면 error 반환받음
+  // 검증에 성공하면 user 반환받음
+  // 반환 상태에 대해 info 반환받음
+  // => { 다음에 실행될 코드 }
+  passport.authenticate('local', (error, user, info) => {
+    if (error) res.status(400).json({ status: 'fail', error });
+    if (!user) res.status(401).json({ status: 'fail', error: info.message });
+    res.login(user, (error) => {
+      if (error) return next(error);
+      res.status(200).json({ status: 'success', user });
+    });
+  })(req, res, next);
+});
