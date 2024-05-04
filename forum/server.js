@@ -197,6 +197,8 @@ app.use(
 );
 app.use(passport.session());
 
+const bcrypt = require('bcrypt');
+
 // passport id/pw 검증 로직
 // id/pw 외에도 요청받아서 검증하고 싶으면 passReqToCallback option 사용
 passport.use(
@@ -208,7 +210,10 @@ passport.use(
         // parameter 2 = true - 인증 성공(생략 가능), false - 회원인증 실패
         return cb(null, false, { message: '등록되지 않은 아이디 입니다.' });
       }
-      if (result.password === password) {
+
+      // if (result.password === password) {
+      // bcrypt.compare 암호화된 비밀번호 검증
+      if (await bcrypt.compare(result.password, password)) {
         // 로그인에 성공하면 result에 유저의 정보를 담아서 반환
         return cb(null, result);
       } else {
@@ -246,10 +251,10 @@ passport.deserializeUser(async (user, done) => {
 });
 
 app.get('/login', async (req, res) => {
-  console.log(req.user);
   res.render('login.ejs');
 });
 
+// 로그인
 app.post('/login', async (req, res, next) => {
   // passport.authentiate = passport id/pw 검증 로직 실행
   // 검증에 실패하면 error 반환받음
@@ -276,4 +281,23 @@ app.get('/mypage', async (req, res) => {
   } catch (e) {
     res.redirect('/');
   }
+});
+
+app.get('/register', (req, res) => {
+  res.render('register.ejs');
+});
+
+// 회원가입
+app.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+
+  const salt = bcrypt.salt(10);
+  const hash = await bcrypt.hash(passport, salt);
+
+  const user = await db.collection('user').insertOne({
+    username,
+    password: hash,
+  });
+
+  res.redirect('/login');
 });
