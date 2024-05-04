@@ -63,6 +63,30 @@ app.get('/list', async (req, res) => {
   res.render('list.ejs', { data: post });
 });
 
+app.get('/list/:page', async (req, res) => {
+  const { page } = req.params;
+
+  // skip 앞에서부터 입력된 값만큼 데이터를 스킵
+  // limit 보여줄 데이터의 개수
+  const post = await db
+    .collection('post')
+    .find()
+    .skip((page - 1) * 5)
+    .limit(5)
+    .toArray();
+
+  // url = get("/list/next/:id")
+  // id 에는 읽어온 게시글 중 마지막 게시글의 id를 param으로 요청
+  const { id } = req.params;
+  let recent = await db
+    .collection('post')
+    // 방금 마지막으로 본 게시물 기준으로 게시글 읽어오기
+    .find({ _id: { $gt: new ObjectId(id) } })
+    .limit(5)
+    .toArray();
+  console.log(post);
+});
+
 app.get('/about', (req, res) => {
   res.sendFile(__dirname + '/about.html');
 });
