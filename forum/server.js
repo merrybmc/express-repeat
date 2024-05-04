@@ -325,3 +325,29 @@ app.post('/register', async (req, res) => {
     res.status(400).json({ status: 'fail', error: e.message });
   }
 });
+
+// middleware
+// 미들웨어 함수에선 req, res, next 사용 가능
+const userValidCheck = (req, res, next) => {
+  if (!req.user) {
+    // next() => 다음 middleware 호출
+    next();
+  }
+};
+
+const userRequestAdd = (req, res, next) => {
+  // 다음 middleware의 req에 데이터를 담아서 전송
+  req.test = 'success';
+};
+
+// 모든 API가 호출받을 때마다 자동으로 해당 middleware 호출
+app.use(userRequestAdd);
+
+// 해당 route와 일치하는 모든 API가 호출받을 때마다 자동으로 해당 middleware 호출
+app.use('/test', userRequestAdd);
+
+// userValidCheck, userRequestAdd, route 함수 순으로 호출
+app.get('middlewareTest', userValidCheck, userRequestAdd, (req, res) => {
+  console.log(req.test);
+  res.send('');
+});
