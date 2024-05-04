@@ -128,14 +128,24 @@ app.get('/edit/:id', async (req, res) => {
 app.put('/edit/:id', async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
-
-  const data = await db
-    .collection('post')
-    .updateOne({ _id: new ObjectId(id) }, { $set: { title, content } });
-
-  console.log('a', data);
-  res.status(200).json({ status: 'success', data });
   try {
+    const data = await db
+      .collection('post')
+      .updateOne({ _id: new ObjectId(id) }, { $set: { title, content } });
+
+    res.status(200).json({ status: 'success', data });
+  } catch (e) {
+    res.status(400).json({ status: 'fail', error: e.massage });
+  }
+});
+
+app.delete('/delete/:id', async (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+  try {
+    const data = await db.collection('post').deleteOne({ _id: new ObjectId(id) });
+    console.log('a', data);
+    res.status(200).json({ status: 'success', data });
   } catch (e) {
     res.status(400).json({ status: 'fail', error: e.massage });
   }

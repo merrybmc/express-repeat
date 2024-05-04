@@ -21,7 +21,9 @@
                     <div class="list-box">
                         <a href="/detail/<%=data[i]._id %>">
                             <h4>
-                                <%=data[i].title%> <a href="/edit/<%=data[i]._id%>">✏️</a>
+                                <%=data[i].title%>
+                                    <a href="/edit/<%=data[i]._id%>">✏️</a>
+                                    <button class="delete" id="<%=data[i]._id%>">🗑</button>
                             </h4>
 
                             <p>
@@ -31,6 +33,39 @@
                     </div>
                     <%} %>
             </div>
+            <script>
+                const deleteBtn = document.querySelectorAll(".delete");
+                for (let i = 0; i < deleteBtn.length; i++) {
+                    deleteBtn[i].addEventListener("click", (e) => {
+                        const id = e.target.id;
+                        console.log(id);
+                        fetch(`/delete/${id}`, {
+                            method: "DELETE",
+                            // header
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            // body data request
+                            // body: JSON.stringify({})
+                        }).then((res) => { if (res.status === 200) location.reload() })
+                            .catch((e) => alert(e.message))
+                    })
+                }
+
+                // document.querySelectorAll(".delete")[0].addEventListener
+                //     ("click", (e) => {
+                //         const id = e.target.id;
+                //         fetch(`/delete/:${id}`, {
+                //             method: "DELETE",
+                //             // header
+                //             headers: {
+                //                 "Content-Type": "application/json",
+                //             },
+                //             // body data request
+                //             // body: JSON.stringify({})
+                //         })
+                //     })
+            </script>
     </body>
 </body>
 
