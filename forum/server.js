@@ -399,3 +399,22 @@ const upload = multer({
 //   })
 //   (생략)
 // })
+
+// 기본 분리법
+require('./routes/shop');
+
+// middleware 분리
+// url 시작부분 축약 가능
+app.use('/shop', require('./routes/shop'));
+
+app.get('/search', async (req, res) => {
+  const { val } = req.query;
+
+  const data = db
+    .collection('post')
+    // $regex 정규식 : value - 해당 문자가 포함된 데이터 모두 찾기 (=.includes)
+    .find({ title: { $regex: val } })
+    .toArray();
+
+  res.render('search.ejs', { data });
+});
