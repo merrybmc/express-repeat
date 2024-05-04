@@ -4,6 +4,15 @@ require('dotenv').config();
 const bodyparser = require('body-parser');
 const methodOverride = require('method-override');
 
+// socket.io
+// npm install socket.io
+
+// socket.io setting
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const server = createServer(app);
+const io = new Server(server);
+
 // ejs (template engine)
 
 // ejs setting
@@ -36,7 +45,10 @@ app.use(express.static('public'));
 // app.use(express.static(__dirname + '/public'));
 
 // server connect, parameter 1 = 서버 띄울 PORT 번호 입력
-app.listen(8080, () => {
+// app.listen(8080, () => {
+
+// socket.io
+server.listen(8080, () => {
   console.log('8080 server connected');
 });
 
@@ -55,7 +67,6 @@ app.get('/news', (req, res) => {
 // mongodb read
 app.get('/list', async (req, res) => {
   const post = await db.collection('post').find().toArray();
-
   // res.send(post);
   // ejs 파일 기본 경로 = views 폴더
   // ejs 파일로 데이터를 전송
@@ -99,24 +110,6 @@ app.get('/time', (req, res) => {
 
 app.get('/write', (req, res) => {
   res.render('write.ejs');
-});
-
-app.post('/add', (req, res) => {
-  const { title, content } = req.body;
-  const { _id, username } = req.user;
-  try {
-    if (!req.user) throw new Error('로그인중이지 않습니다.');
-    if (title === '') {
-      res.send('empty in title');
-    } else {
-      db.collection('post').insertOne({ title, content, userId: _id, username });
-
-      res.redirect('/list');
-      // res.status(200).json({ status: 'success' });
-    }
-  } catch (e) {
-    res.status(400).send({ status: 'fail' });
-  }
 });
 
 app.get('/detail/:id', async (req, res) => {
@@ -438,4 +431,69 @@ app.post('/comment', async (req, res) => {
   // });
 
   res.redirect('back');
+});
+
+app.post('/add', async (req, res) => {
+  const { title, content } = req.body;
+  // console.log(req.user);
+  // const { id, username } = req.user;
+  try {
+    if (!req.user) throw new Error('로그인중이지 않습니다.');
+    if (title === '') {
+      res.send('empty in title');
+    } else {
+      await db.collection('post').insertOne({
+        title,
+        content,
+        userId: req.user._id,
+        username: req.user.username,
+      });
+
+      res.redirect('/list');
+      // res.status(200).json({ status: 'success' });
+    }
+  } catch (e) {
+    res.status(400).send({ status: 'fail' });
+  }
+});
+
+app.get('/chat/list', async (req, res) => {
+  const result = await db.collection('chatroom').find({ member: req.user._id }).toArray();
+  res.render('chat.ejs', { result });
+});
+
+app.get('/chat/request', async (req, res) => {
+  console.log(req.user);
+  await db.collection('chatroom').insertOne({
+    member: [req.user._id, req.query.writerId],
+    data: new Date(),
+  });
+});
+
+app.get('/chat/detail/:id', async (req, res) => {
+  const { _id } = req.params;
+  await db.collection('chatroom').findOne({ _id });
+  res.render('chatdetail.ejs', { result });
+});
+
+// socket 데이터 수신
+io.on('connection', (socket) => {
+  console.log('websocket connect');
+
+  // 해당 데이터 이름으로 데이터를 보내면 해당 콜백함수 실행
+  socket.on('ask-join', (data) => {
+    console.log(data);
+
+    // 채팅방에 속하지 않은 유저가 룸 join 요청을 할 시
+    socket.request.session;
+
+    socket.join(data);
+    // 서버 -> 유저 데이터 전송
+    io.emit('name', 'bmc');
+  });
+
+  socket.on('message', (data) => {
+    // 서버 -> 룸 메세지 전달
+    io.to(data.room).emit('broadcast', data.msg);
+  });
 });

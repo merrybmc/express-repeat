@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+</head>
+
+<body>
+    <p>chatting room</p>
+    <div class="white-bg">
+        <% for (let i=0; i < result.length; i++){ %>
+            <div class="list-box">
+                <h4>
+                    <a href="/chat/detail/<%= result.[i].id%>">채팅방 <%= i %></a>
+                </h4>
+                <p>채팅방설명~~</p>
+            </div>
+            <% } %>
+    </div>
+</body>
+
+</html>

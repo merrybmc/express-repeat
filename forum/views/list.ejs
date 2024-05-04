@@ -35,6 +35,7 @@
                                 <%=data[i].title%>
                                     <a href="/edit/<%=data[i]._id%>">✏️</a>
                                     <button class="delete" id="<%=data[i]._id%>">🗑</button>
+                                    <a href="/chat/request?writerId?<%= data[i].userId%>">채팅</button>
                             </h4>
 
                             <p>
