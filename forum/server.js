@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 require('dotenv').config();
 const bodyparser = require('body-parser');
+const methodOverride = require('method-override');
 
 // ejs (template engine)
 
@@ -11,6 +12,9 @@ app.set('view engine', 'ejs');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// html form 태그에서 put, delete 요청이 가능하도록 도와주는 라이브러리
+app.use(methodOverride('_method'));
 
 const { MongoClient, ObjectId } = require('mongodb');
 const url = process.env.MONGODB_URI;
@@ -55,6 +59,7 @@ app.get('/list', async (req, res) => {
   // res.send(post);
   // ejs 파일 기본 경로 = views 폴더
   // ejs 파일로 데이터를 전송
+
   res.render('list.ejs', { data: post });
 });
 
@@ -90,15 +95,47 @@ app.post('/add', (req, res) => {
 
 app.get('/detail/:id', async (req, res) => {
   const { id } = req.params;
-  // let id = '66351217a7e14af808cf3212';
+
   try {
+    if (!id) throw new Error('not found Id');
+
     let result = await db.collection('post').findOne({ _id: new ObjectId(id) });
 
-    if (!result) throw new Error('not found Page');
-
-    console.log(result);
+    if (!result) throw new Error('not found Data');
 
     res.render('detail.ejs', { data: result });
+  } catch (e) {
+    res.status(400).json({ status: 'fail', error: e.massage });
+  }
+});
+
+app.get('/edit/:id', async (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+  try {
+    if (!id) throw new Error('not found Id');
+    const data = await db.collection('post').findOne({ _id: new ObjectId(id) });
+
+    console.log(data);
+
+    if (!data) throw new Error('not found Data');
+    res.render('edit.ejs', { data });
+  } catch (e) {
+    res.status(400).json({ status: 'fail', error: e.massage });
+  }
+});
+
+app.put('/edit/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
+
+  const data = await db
+    .collection('post')
+    .updateOne({ _id: new ObjectId(id) }, { $set: { title, content } });
+
+  console.log('a', data);
+  res.status(200).json({ status: 'success', data });
+  try {
   } catch (e) {
     res.status(400).json({ status: 'fail', error: e.massage });
   }
