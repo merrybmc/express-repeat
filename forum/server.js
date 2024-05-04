@@ -266,3 +266,14 @@ app.post('/login', async (req, res, next) => {
     });
   })(req, res, next);
 });
+
+app.get('/mypage', async (req, res) => {
+  console.log(req.user);
+  try {
+    if (!req.user) throw new Error('login please');
+
+    res.render('mypage.ejs', { data: req.user });
+  } catch (e) {
+    res.redirect('/');
+  }
+});
