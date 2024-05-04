@@ -104,6 +104,7 @@ app.get('/write', (req, res) => {
 app.post('/add', (req, res) => {
   const { title, content } = req.body;
   try {
+    if (!req.user) throw new Error('로그인중이지 않습니다.');
     if (title === '') {
       res.send('empty in title');
     } else {
@@ -185,6 +186,10 @@ const session = require('express-session');
 const passport = require('passport');
 const localStrategy = require('passport-local');
 
+// npm install connect-mongo
+// session 정보 DB 저장
+const MongoStore = require('connect-mongo');
+
 // 순서 지켜서 use할 것
 app.use(passport.initialize());
 app.use(
@@ -193,10 +198,17 @@ app.use(
     resave: false, // 클라이언트가 api 요청을 보낼 때 마다 session을 갱신할건지
     saveUninitialized: false, // login을 안해도 session을 생성할건지
     cookie: { maxAge: 60 * 60 * 60 * 1000 }, // 밀리초 단위, 쿠키 유효기간 미입력 시 기본 2주
+    store: MongoStore.create({
+      // session mongoDB 저장
+      mongoUrl: process.env.MONGODB_URI,
+      dbName: 'forum',
+    }),
   })
 );
 app.use(passport.session());
 
+// npm install bcrypt
+// 비밀번호 암호화
 const bcrypt = require('bcrypt');
 
 // passport id/pw 검증 로직
@@ -213,7 +225,9 @@ passport.use(
 
       // if (result.password === password) {
       // bcrypt.compare 암호화된 비밀번호 검증
-      if (await bcrypt.compare(result.password, password)) {
+      // parameter 1 = 유저가 입력한 비밀번호
+      // parameter 2 = 암호화된 비밀번호
+      if (await bcrypt.compare(password, result.password)) {
         // 로그인에 성공하면 result에 유저의 정보를 담아서 반환
         return cb(null, result);
       } else {
@@ -289,15 +303,25 @@ app.get('/register', (req, res) => {
 
 // 회원가입
 app.post('/register', async (req, res) => {
-  const { username, password } = req.body;
+  try {
+    const { username, password, passwordCheck } = req.body;
 
-  const salt = bcrypt.salt(10);
-  const hash = await bcrypt.hash(passport, salt);
+    if (password !== passwordCheck) throw new Error('비밀번호가 일치하지 않습니다.');
 
-  const user = await db.collection('user').insertOne({
-    username,
-    password: hash,
-  });
+    const valid = await db.collection('user').findOne({ username });
+    console.log(valid);
+    if (valid) throw new Error('이미 존재하는 아이디입니다.');
 
-  res.redirect('/login');
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+
+    const user = await db.collection('user').insertOne({
+      username,
+      password: hash,
+    });
+
+    res.redirect('/login');
+  } catch (e) {
+    res.status(400).json({ status: 'fail', error: e.message });
+  }
 });
