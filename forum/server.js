@@ -351,3 +351,51 @@ app.get('middlewareTest', userValidCheck, userRequestAdd, (req, res) => {
   console.log(req.test);
   res.send('');
 });
+
+// se image upload
+
+// npm install multer multer-s3 @aws-sdk/client-s3
+
+const { S3Client } = require('@aws-sdk/client-s3');
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+const s3 = new S3Client({
+  region: 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.AWS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
+  },
+});
+
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: process.env.S3_BUCKEY,
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString()); //파일 업로드시 파일명 설정
+    },
+  }),
+});
+
+// 단일 파일 업로드 middleware 설정
+// upload.single(key)
+// 다중 파일 업로드
+// upload.array(key,number?) number - 파일 개수
+
+// app.post('/add', upload.single("image"), (요청, 응답) => {
+
+// 파일 단일 조회
+// req.file
+// 파일 다중 조회
+// req.files
+// 파일 url
+// req.file.locaiton
+
+//   console.log(요청.file)
+//   await db.collection('post').insertOne({
+//     title : 요청.body.title,
+//     content : 요청.body.content,
+//     img : 요청.file.location
+//   })
+//   (생략)
+// })
