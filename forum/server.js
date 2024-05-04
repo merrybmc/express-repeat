@@ -178,6 +178,7 @@ app.delete('/delete/:id', async (req, res) => {
 // npm install express-session passport passport-local
 // express-session - session create
 // passport - user auth
+// passport-local - ID/PW vaild
 
 // passport setting
 const session = require('express-session');
@@ -191,23 +192,24 @@ app.use(
     secret: process.env.SESSION_SECRET, // session의 id를 암호화해서 유저에게 전송
     resave: false, // 클라이언트가 api 요청을 보낼 때 마다 session을 갱신할건지
     saveUninitialized: false, // login을 안해도 session을 생성할건지
+    cookie: { maxAge: 60 * 60 * 60 * 1000 }, // 밀리초 단위, 쿠키 유효기간 미입력 시 기본 2주
   })
 );
 app.use(passport.session());
-// passport-local - ID/PW vaild
 
 // passport id/pw 검증 로직
 // id/pw 외에도 요청받아서 검증하고 싶으면 passReqToCallback option 사용
 passport.use(
-  new localStrategy(async (id, password, cb) => {
+  new localStrategy(async (username, password, cb) => {
     try {
-      let result = await db.collection('user').findOne({ username: id });
+      let result = await db.collection('user').findOne({ username });
 
       if (!result) {
         // parameter 2 = true - 인증 성공(생략 가능), false - 회원인증 실패
         return cb(null, false, { message: '등록되지 않은 아이디 입니다.' });
       }
-      if (!result.password === password) {
+      if (result.password === password) {
+        // 로그인에 성공하면 result에 유저의 정보를 담아서 반환
         return cb(null, result);
       } else {
         return cb(null, false, { message: '비밀번호가 일치하지 않습니다.' });
@@ -216,12 +218,40 @@ passport.use(
   })
 );
 
+// 로그인 시 세션 만들기
+// passport.authenticate에서 response.logn()을 할 경우 자동 호출됨
+// user = 로그인 시도중인 user의 DB에 담긴 개인정보
+passport.serializeUser((user, done) => {
+  // process.nextTick = 내부 코드를 비동기로 처리해줌
+  process.nextTick(() => {
+    // 유저의 정보를 담아서 session 발행, password는 미입력
+    // cookie에 담아서 전송
+
+    done(null, { id: user._id, username: user.username });
+  });
+});
+
+// 클라이언트가 요청한 cookie 검증
+// 클라이언트가 api 요청을 할 때 마다 cookie도 함께 전송됨
+// 해당 함수를 만들어두고 request.user를 하면 cookie 검증하고 회원정보 반환
+passport.deserializeUser(async (user, done) => {
+  // session의 user가 오래된 정보인지 검증
+  let result = await db.collection('user').findOne({ _id: new ObjectId(user.id) });
+  delete result.password;
+
+  process.nextTick(() => {
+    // 쿠키 검증이 되면 로그인된 유저 정보 반환
+    done(null, result);
+  });
+});
+
 app.get('/login', async (req, res) => {
+  console.log(req.user);
   res.render('login.ejs');
 });
 
 app.post('/login', async (req, res, next) => {
-  // passport id/pw 검증 로직 실행
+  // passport.authentiate = passport id/pw 검증 로직 실행
   // 검증에 실패하면 error 반환받음
   // 검증에 성공하면 user 반환받음
   // 반환 상태에 대해 info 반환받음
@@ -229,9 +259,10 @@ app.post('/login', async (req, res, next) => {
   passport.authenticate('local', (error, user, info) => {
     if (error) res.status(400).json({ status: 'fail', error });
     if (!user) res.status(401).json({ status: 'fail', error: info.message });
-    res.login(user, (error) => {
+    req.login(user, (error) => {
       if (error) return next(error);
-      res.status(200).json({ status: 'success', user });
+      res.redirect('/');
+      // res.status(200).json({ status: 'success', user });
     });
   })(req, res, next);
 });
