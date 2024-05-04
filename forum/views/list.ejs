@@ -19,38 +19,16 @@
             <div class="white-bg">
                 <% for(let i=0; i < data.length; i++){ %>
                     <div class="list-box">
-                        <h4>
-                            <%=data.title%>
-                        </h4>
-                        <p>
-                            <%=data.content%>
-                        </p>
+                        <a href="/detail/<%=data[i]._id %>">
+                            <h4>
+                                <%=data[i].title%>
+                            </h4>
+                            <p>
+                                <%=data[i].content%>
+                            </p>
+                        </a>
                     </div>
                     <%} %>
-                        <div class="list-box">
-                            <h4>
-                                <%=data[0].title%>
-                            </h4>
-                            <p>
-                                <%=data[0].content%>
-                            </p>
-                        </div>
-                        <div class="list-box">
-                            <h4>
-                                <%=data[1].title%>
-                            </h4>
-                            <p>
-                                <%=data[1].content%>
-                            </p>
-                        </div>
-                        <div class="list-box">
-                            <h4>
-                                <%=data[2].title%>
-                            </h4>
-                            <p>
-                                <%=data[2].content%>
-                            </p>
-                        </div>
             </div>
     </body>
 </body>

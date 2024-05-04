@@ -12,7 +12,7 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const url = process.env.MONGODB_URI;
 
 let db;
@@ -85,5 +85,21 @@ app.post('/add', (req, res) => {
     }
   } catch (e) {
     res.status(400).send({ status: 'fail' });
+  }
+});
+
+app.get('/detail/:id', async (req, res) => {
+  const { id } = req.params;
+  // let id = '66351217a7e14af808cf3212';
+  try {
+    let result = await db.collection('post').findOne({ _id: new ObjectId(id) });
+
+    if (!result) throw new Error('not found Page');
+
+    console.log(result);
+
+    res.render('detail.ejs', { data: result });
+  } catch (e) {
+    res.status(400).json({ status: 'fail', error: e.massage });
   }
 });
