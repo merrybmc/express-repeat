@@ -126,10 +126,14 @@ app.get('/detail/:id', async (req, res) => {
     if (!id) throw new Error('not found Id');
 
     let result = await db.collection('post').findOne({ _id: new ObjectId(id) });
+    let commentList = await db
+      .collection('comment')
+      .find({ parentId: new ObjectId(id) })
+      .toArray();
 
     if (!result) throw new Error('not found Data');
 
-    res.render('detail.ejs', { data: result });
+    res.render('detail.ejs', { data: result, comment: commentList });
   } catch (e) {
     res.status(400).json({ status: 'fail', error: e.massage });
   }
@@ -404,11 +408,11 @@ const upload = multer({
 // })
 
 // 기본 분리법
-require('./routes/shop');
+// require('./routes/shop');
 
 // middleware 분리
 // url 시작부분 축약 가능
-app.use('/shop', require('./routes/shop'));
+// app.use('/shop', require('./routes/shop'));
 
 app.get('/search', async (req, res) => {
   const { val } = req.query;
@@ -420,4 +424,18 @@ app.get('/search', async (req, res) => {
     .toArray();
 
   res.render('search.ejs', { data });
+});
+
+app.post('/comment', async (req, res) => {
+  // const { comment, parentId } = req.body;
+  // const { _id, username } = req.user;
+  console.log(req.user);
+  // const data = await db.collection('comment').insertOne({
+  //   content: comment,
+  //   writerId: _id,
+  //   writername: username,
+  //   parentId,
+  // });
+
+  res.redirect('back');
 });

@@ -19,6 +19,21 @@
                 <%=data.content%>
             </p>
         </div>
+        <hr style="margin-top: 60px">
+        <div>
+            <% for (let i=0; i < result2.length; i++) { %>
+                <p><strong>
+                        <%= result2[i].writer %>
+                    </strong>
+                    <%= result2[i].content %>
+                </p>
+                <% } %>
+        </div>
+        <form action="/comment" method="POST">
+            <input name="content">
+            <!-- <input name="parentId" value="<%=data._id %>" style="display: none"> -->
+            <button type="submit">댓글작성</button>
+        </form>
 </body>
 
 </html>
